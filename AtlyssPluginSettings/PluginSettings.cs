@@ -10,7 +10,7 @@ namespace AtlyssPluginSettings
     
     [SuppressMessage("ReSharper", "UnusedMember.Local")] [SuppressMessage("ReSharper", "UnusedType.Global")]
     
-    [BepInPlugin("net.portalsam.AtlyssPluginSettings", "PluginSettings", "1.0.0.0")]
+    [BepInPlugin("net.portalsam.AtlyssPluginSettings", "PluginSettings", "1.0.1.0")]
     [BepInProcess("ATLYSS.exe")]
     public class PluginSettings : BaseUnityPlugin
     {
