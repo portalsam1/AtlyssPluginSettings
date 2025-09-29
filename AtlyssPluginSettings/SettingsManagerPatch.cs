@@ -39,20 +39,28 @@ namespace AtlyssPluginSettings
                 
                 KeybindButtons.Clear();
 
-                _settingsMenuReference = GameObject.Find("_SettingsManager/Canvas_SettingsMenu");
+                _settingsMenuReference = Utility.TryFind("_SettingsManager/Canvas_SettingsMenu");
                 
-                _dollySettingsMenuReference = GameObject.Find("_SettingsManager/Canvas_SettingsMenu/_dolly_settingsMenu");
-                _cancelButtonReference = GameObject.Find("_SettingsManager/Canvas_SettingsMenu/_dolly_settingsMenu/Image_01/Button_cancelSettings");
+                _dollySettingsMenuReference = Utility.TryFind("_SettingsManager/Canvas_SettingsMenu/_dolly_settingsMenu");
+                _cancelButtonReference = Utility.TryFind("_SettingsManager/Canvas_SettingsMenu/_dolly_settingsMenu/_dolly_settingsButtons/Button_cancelSettings");
                 
-                _inputSettingsTabReference = GameObject.Find("_SettingsManager/Canvas_SettingsMenu/_dolly_settingsMenu/_dolly_inputSettingsTab");
+                _inputSettingsTabReference = Utility.TryFind("_SettingsManager/Canvas_SettingsMenu/_dolly_settingsMenu/_dolly_inputSettingsTab");
                 
-                _settingsHeaderReference = GameObject.Find("_SettingsManager/Canvas_SettingsMenu/_dolly_settingsMenu/_dolly_videoSettingsTab/_backdrop_videoSettings/Scroll View/Viewport/Content/_header_GameEffectSettings");
-                _boolToggleReference = GameObject.Find("_SettingsManager/Canvas_SettingsMenu/_dolly_settingsMenu/_dolly_videoSettingsTab/_backdrop_videoSettings/Scroll View/Viewport/Content/_cell_proportionsToggle");
-                _keyCodeReference = GameObject.Find("_SettingsManager/Canvas_SettingsMenu/_dolly_settingsMenu/_dolly_inputSettingsTab/_backdrop/Scroll View/Viewport/Content/_cell_keybinding_up");
-                _resetButtonReference = GameObject.Find("_SettingsManager/Canvas_SettingsMenu/_dolly_settingsMenu/_dolly_inputSettingsTab/_backdrop/Scroll View/Viewport/Content/_cell_cameraSensitivity/Button_01");
+                _settingsHeaderReference = Utility.TryFind("_SettingsManager/Canvas_SettingsMenu/_dolly_settingsMenu/_dolly_videoSettingsTab/_backdrop_videoSettings/Scroll View/Viewport/Content/_header_GameEffectSettings");
+                _boolToggleReference = Utility.TryFind("_SettingsManager/Canvas_SettingsMenu/_dolly_settingsMenu/_dolly_videoSettingsTab/_backdrop_videoSettings/Scroll View/Viewport/Content/_cell_jiggleBonesToggle");
+                _keyCodeReference = Utility.TryFind("_SettingsManager/Canvas_SettingsMenu/_dolly_settingsMenu/_dolly_inputSettingsTab/_backdrop/Scroll View/Viewport/Content/_cell_keybinding_up");
+                _resetButtonReference = Utility.TryFind("_SettingsManager/Canvas_SettingsMenu/_dolly_settingsMenu/_dolly_inputSettingsTab/_backdrop/Scroll View/Viewport/Content/_cell_cameraSensitivity/Button_01");
+
+                if (!_settingsMenuReference || !_dollySettingsMenuReference || !_cancelButtonReference ||
+                    !_inputSettingsTabReference || !_settingsHeaderReference || !_boolToggleReference ||
+                    !_keyCodeReference || !_resetButtonReference)
+                {
+                    PluginSettings.Logger.LogError("One or more UI elements were not found. Mod will not take any affect.");
+                    return;
+                }
                 
-                GameObject pluginSettingsButtonObject = Object.Instantiate(_cancelButtonReference, _dollySettingsMenuReference.transform, true);
-                pluginSettingsButtonObject.name = "Button_pluginSettings";
+                GameObject? pluginSettingsButtonObject = Object.Instantiate(_cancelButtonReference, _dollySettingsMenuReference!.transform, true);
+                pluginSettingsButtonObject!.name = "Button_pluginSettings";
                 pluginSettingsButtonObject.transform.localPosition = new Vector3(-219f, -212f, 0f);
                 pluginSettingsButtonObject.transform.localScale = new Vector3(1f, 1f, 1f);
 
@@ -62,8 +70,8 @@ namespace AtlyssPluginSettings
                 pluginSettingsButton.onClick = new Button.ButtonClickedEvent();
                 pluginSettingsButton.onClick.AddListener(delegate { __instance.Set_SettingMenuSelectionIndex(Plugin); });
                 
-                _pluginSettingsTabReference = Object.Instantiate(_inputSettingsTabReference, _inputSettingsTabReference.transform.parent, true);
-                _pluginSettingsTabReference.name = "_dolly_pluginSettingsTab";
+                _pluginSettingsTabReference = Object.Instantiate(_inputSettingsTabReference, _inputSettingsTabReference!.transform.parent, true);
+                _pluginSettingsTabReference!.name = "_dolly_pluginSettingsTab";
                 _pluginSettingsTabReference.transform.localPosition = new Vector3(1f, 1f, 1f);
                 
                 _pluginsContentReference = _pluginSettingsTabReference.transform.Find("_backdrop/Scroll View/Viewport/Content").gameObject;
