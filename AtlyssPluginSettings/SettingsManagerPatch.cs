@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using System.Reflection;
 using BepInEx;
 using BepInEx.Bootstrap;
@@ -18,15 +19,18 @@ namespace AtlyssPluginSettings
     
     internal static class SettingsManagerPatch
     {
+
+        private static SettingsManager _settingsManager; 
         
         private static MenuElement? _pluginSettingsMenuElement;
+        private static MenuElement? _settingsMenuElement;
         private static GameObject? _inputSettingsTabReference, _pluginSettingsTabReference, _pluginsContentReference, _resetButtonReference, _settingsMenuReference;
 
-        private static readonly List<Button> KeybindButtons = new List<Button>();
+        private static readonly List<Button> KeybindButtons = new();
         private static bool _waitingForKey;
         
         // Hardcoded enum value, maybe change this to dynamically choose a number in case other mods want to fuck with the settings menu, I am lazy for right now though.
-        private const int Plugin = 4;
+        private static byte? tab = null;
         
         [HarmonyPatch(typeof(SettingsManager), "Start")] [SuppressMessage("ReSharper", "UnusedMember.Local")] [SuppressMessage("ReSharper", "InconsistentNaming")]
         internal static class SettingsManagerStartPatch
@@ -68,7 +72,6 @@ namespace AtlyssPluginSettings
             
                 Button pluginSettingsButton = pluginSettingsButtonObject.GetComponent<Button>();
                 pluginSettingsButton.onClick = new Button.ButtonClickedEvent();
-                pluginSettingsButton.onClick.AddListener(delegate { __instance.Set_SettingMenuSelectionIndex(Plugin); });
                 
                 _pluginSettingsTabReference = Object.Instantiate(_inputSettingsTabReference, _inputSettingsTabReference!.transform.parent, true);
                 _pluginSettingsTabReference!.name = "_dolly_pluginSettingsTab";
@@ -80,7 +83,9 @@ namespace AtlyssPluginSettings
                 
                 SetupSettingsMenu();
                 
-                PluginSettings.Logger.LogInfo("SettingsManager has been patched.");
+                _settingsMenuElement = typeof(SettingsManager).GetField("_settingsMenuElement", BindingFlags.Instance | BindingFlags.NonPublic)?.GetValue(__instance) as MenuElement;
+                tab = GetUnusedSettingMenuSelectionIndex(_settingsMenuElement!.gameObject);
+                pluginSettingsButton.onClick.AddListener(delegate { __instance.Set_SettingMenuSelectionIndex((int)tab); });
 
             }
 
@@ -365,13 +370,58 @@ namespace AtlyssPluginSettings
         internal static class SettingsManagerSelectionPatch
         {
             
-            private static void Finalizer(int _index)
+            private static void Finalizer(SettingsManager __instance, int _index)
             {
-                // This is usually supposed to check against _currentSettingsMenuSelection in SettingsManager, but I for some reason can't bind to that property. So fuck it we ball.
-                if (_pluginSettingsMenuElement != null)
-                    _pluginSettingsMenuElement.isEnabled = _index == Plugin;
+                //// This is usually supposed to check against _currentSettingsMenuSelection in SettingsManager, but I for some reason can't bind to that property. So fuck it we ball.
+                //if (_pluginSettingsMenuElement != null)
+                //    _pluginSettingsMenuElement.isEnabled = _index == Plugin;
+                if (_pluginSettingsMenuElement != null && tab != null)
+                {
+                    _pluginSettingsMenuElement.isEnabled = _index == tab;
+                    Debug.Log("woohoo");
+                }
             }
             
+        }
+        
+        private static byte GetUnusedSettingMenuSelectionIndex(GameObject settingsMenu)
+        {
+
+            if (_settingsManager == null) _settingsManager = SettingsManager._current;
+            
+            List<MenuElement> menuElements = [];
+                
+            /* Find all menu elements that are a tab in the settings menu, and that are not the parent settings menu. */
+            foreach (Object obj in Object.FindObjectsOfType(typeof(MenuElement), true))
+            {
+                    
+                MenuElement? menuElement = obj as MenuElement;
+                if(menuElement?.gameObject == null || menuElement.gameObject == settingsMenu) continue;
+                    
+                if(menuElement && menuElement.transform.IsChildOf(settingsMenu.transform))
+                    menuElements.Add(menuElement);
+                    
+            }
+            
+            /* Iterate through every possible tab index until one is found that does not have an enabled menu element. */
+            for (byte i = 0; i < byte.MaxValue; i++)
+            {
+
+                bool indexUsed = false;
+                    
+                _settingsManager.Set_SettingMenuSelectionIndex(i);
+                foreach (MenuElement unused in menuElements.Where(menuElement => menuElement.isEnabled))
+                    indexUsed = true;
+
+                if (indexUsed) continue;
+            
+                _settingsManager.Set_SettingMenuSelectionIndex(0);
+                return i;
+
+            }
+
+            return 255;
+
         }
         
     }

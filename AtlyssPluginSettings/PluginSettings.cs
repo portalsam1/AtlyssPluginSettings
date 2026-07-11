@@ -1,7 +1,6 @@
-﻿using BepInEx;
-using BepInEx.Configuration;
+﻿using HarmonyLib;
+using BepInEx;
 using BepInEx.Logging;
-using HarmonyLib;
 using System.Reflection;
 using System.Diagnostics.CodeAnalysis;
 
@@ -29,8 +28,6 @@ namespace AtlyssPluginSettings
             Logger.LogInfo("PluginSettings has been initialized!");
     
         }
-
-        internal static ConfigFile GetConfig() => Instance.Config;
         
     }
     
